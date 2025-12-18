@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Clase de Regalo - ODIN GYM</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1A1A1A;
+            color: #fff;
+        }
+        .container {
+            background: #2A2A2A;
+            padding: 30px;
+            border-radius: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            background: #F2C94C;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #E6B821;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .message {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #4CAF50;
+            color: white;
+        }
+        .error {
+            background: #f44336;
+            color: white;
+        }
+        .info {
+            background: #2196F3;
+            color: white;
+        }
+        .log {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #F2C94C;
+            padding-left: 10px;
+        }
+        .log-success {
+            border-left-color: #4CAF50;
+        }
+        .log-error {
+            border-left-color: #f44336;
+        }
+        h1 {
+            color: #F2C94C;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Configuración Automática - Clase de Regalo</h1>
+        <p>Este script configurará automáticamente el servicio "Clase de Regalo" y generará todos los slots necesarios.</p>
+        
+        <div id="status" class="status">
+            <strong>Estado:</strong> <span id="statusText">Listo para comenzar</span>
+        </div>
+        
+        <button id="setupButton" onclick="setupClaseRegalo()">Configurar Clase de Regalo</button>
+        
+        <div id="message"></div>
+        
+        <div id="log" class="log" style="display: none;">
+            <strong>Log de operaciones:</strong>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function addLog(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const logContent = document.getElementById('logContent');
+            logDiv.style.display = 'block';
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry log-' + type;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContent.appendChild(entry);
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = 'message ' + type;
+            messageDiv.textContent = text;
+        }
+        
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+        
+        async function setupClaseRegalo() {
+            const button = document.getElementById('setupButton');
+            button.disabled = true;
+            button.textContent = 'Configurando...';
+            
+            document.getElementById('logContent').innerHTML = '';
+            document.getElementById('log').style.display = 'block';
+            
+            try {
+                addLog('Iniciando configuración de Clase de Regalo...', 'info');
+                updateStatus('Inicializando Supabase...');
+                
+                // 1. Inicializar Supabase
+                await window.odinGymSupabase?.initSupabase();
+                addLog('✓ Supabase inicializado', 'success');
+                
+                // 2. Verificar o crear el servicio
+                updateStatus('Verificando servicio...');
+                addLog('Buscando servicio "Clase de Regalo" o "Clase de Prueba"...', 'info');
+                
+                const servicesResult = await window.odinGymSupabase?.getServices();
+                
+                if (!servicesResult?.success) {
+                    throw new Error('No se pudo obtener los servicios: ' + (servicesResult?.error || 'Error desconocido'));
+                }
+                
+                let claseRegalo = servicesResult.data?.find(s => 
+                    s.name.toLowerCase().includes('regalo') || 
+                    s.name.toLowerCase().includes('prueba') ||
+                    s.name.toLowerCase().includes('gratis')
+                );
+                
+                let serviceId;
+                
+                if (claseRegalo) {
+                    addLog(`✓ Servicio encontrado: "${claseRegalo.name}" (ID: ${claseRegalo.id})`, 'success');
+                    serviceId = claseRegalo.id;
+                } else {
+                    addLog('⚠ Servicio no encontrado. Creando nuevo servicio...', 'info');
+                    updateStatus('Creando servicio...');
+                    
+                    // Crear el servicio usando el cliente de Supabase desde supabase.js
+                    // Necesitamos acceder al cliente interno
+                    if (typeof supabase === 'undefined') {
+                        throw new Error('Supabase SDK no está cargado');
+                    }
+                    
+                    const supabaseClient = supabase.createClient(
+                        'https://fdzhfflvmhwcbzzrqent.supabase.co',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkemhmZmx2bWh3Y2J6enJxZW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMjE3MTMsImV4cCI6MjA4MTU5NzcxM30.1qCfEj_mOz0iPEu1_NlO06DvPuSsyjEKPkY1PNLmLXo'
+                    );
+                    
+                    const { data: newService, error: serviceError } = await supabaseClient
+                        .from('services')
+                        .insert({
+                            name: 'Clase de Regalo',
+                            description: 'Clase de prueba gratuita de 1 hora. Sin compromiso, sin tarjeta de crédito.',
+                            duration: 60,
+                            cost: 0
+                        })
+                        .select()
+                        .single();
+                    
+                    if (serviceError) {
+                        throw new Error('Error al crear servicio: ' + serviceError.message);
+                    }
+                    
+                    addLog(`✓ Servicio creado: "${newService.name}" (ID: ${newService.id})`, 'success');
+                    serviceId = newService.id;
+                }
+                
+                // 3. Generar slots
+                updateStatus('Generando slots...');
+                addLog('Generando slots para los próximos 2 meses...', 'info');
+                
+                const startDate = new Date();
+                const endDate = new Date();
+                endDate.setMonth(endDate.getMonth() + 2);
+                
+                const slotsResult = await window.odinGymSupabase?.generateSlots(
+                    serviceId,
+                    startDate,
+                    endDate
+                );
+                
+                if (!slotsResult?.success) {
+                    throw new Error('Error al generar slots: ' + (slotsResult?.error || 'Error desconocido'));
+                }
+                
+                const slotsCount = slotsResult.data?.length || 0;
+                addLog(`✓ ${slotsCount} slots generados exitosamente`, 'success');
+                
+                // 4. Verificar que los slots se pueden obtener
+                updateStatus('Verificando slots...');
+                addLog('Verificando que los slots están disponibles...', 'info');
+                
+                const availableSlotsResult = await window.odinGymSupabase?.getAvailableSlots(
+                    serviceId,
+                    startDate,
+                    endDate
+                );
+                
+                if (availableSlotsResult?.success) {
+                    const availableCount = availableSlotsResult.data?.length || 0;
+                    addLog(`✓ ${availableCount} slots disponibles verificados`, 'success');
+                } else {
+                    addLog('⚠ No se pudieron verificar los slots, pero fueron generados', 'error');
+                }
+                
+                // Éxito
+                updateStatus('✓ Configuración completada');
+                showMessage(`¡Éxito! Se configuró el servicio "Clase de Regalo" y se generaron ${slotsCount} slots.`, 'success');
+                addLog('🎉 Configuración completada exitosamente', 'success');
+                
+            } catch (error) {
+                console.error('Error en setup:', error);
+                updateStatus('✗ Error en la configuración');
+                showMessage('Error: ' + error.message, 'error');
+                addLog('✗ Error: ' + error.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Configurar Clase de Regalo';
+            }
+        }
+        
+        // Inicializar al cargar
+        window.addEventListener('DOMContentLoaded', async () => {
+            addLog('Página cargada. Listo para configurar.', 'info');
+            
+            // Verificar conexión con Supabase
+            try {
+                await window.odinGymSupabase?.initSupabase();
+                const servicesResult = await window.odinGymSupabase?.getServices();
+                
+                if (servicesResult?.success) {
+                    const claseRegalo = servicesResult.data?.find(s => 
+                        s.name.toLowerCase().includes('regalo') || 
+                        s.name.toLowerCase().includes('prueba')
+                    );
+                    
+                    if (claseRegalo) {
+                        updateStatus(`Servicio encontrado: "${claseRegalo.name}"`);
+                        addLog(`Servicio existente detectado: "${claseRegalo.name}"`, 'info');
+                    } else {
+                        updateStatus('No se encontró el servicio. Se creará uno nuevo.');
+                        addLog('No se encontró el servicio "Clase de Regalo". Se creará uno nuevo al hacer clic en el botón.', 'info');
+                    }
+                }
+            } catch (error) {
+                addLog('⚠ No se pudo verificar el estado inicial: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>
+
