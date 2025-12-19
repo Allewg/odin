@@ -107,6 +107,7 @@ SET name = 'Clase de Regalo',
 WHERE name ILIKE '%regalo%' OR name ILIKE '%prueba%' OR name ILIKE '%gratis%';
 
 -- 11. Función para generar slots (si no existe)
+-- ACTUALIZADA: Incluye sábados 08:00-14:00
 CREATE OR REPLACE FUNCTION generate_slots_for_service(
     p_service_id UUID,
     p_start_date DATE,
@@ -126,19 +127,24 @@ BEGIN
     WHILE current_day <= p_end_date LOOP
         day_of_week := EXTRACT(DOW FROM current_day);
         
-        -- Solo días laborables (1=Lunes, 5=Viernes)
+        -- Configuración de horarios según día
+        -- 0=Domingo (cerrado), 1-5=Lunes-Viernes, 6=Sábado
+        start_hour := NULL;
+        end_hour := NULL;
+        
+        -- Lunes a Viernes: 06:00-22:00
         IF day_of_week >= 1 AND day_of_week <= 5 THEN
-            -- Lunes a Jueves: 06:00-23:00
-            IF day_of_week >= 1 AND day_of_week <= 4 THEN
-                start_hour := 6;
-                end_hour := 23;
-            -- Viernes: 06:00-22:00
-            ELSIF day_of_week = 5 THEN
-                start_hour := 6;
-                end_hour := 22;
-            END IF;
-            
-            -- Generar slots cada hora
+            start_hour := 6;
+            end_hour := 22;
+        -- Sábado: 08:00-14:00
+        ELSIF day_of_week = 6 THEN
+            start_hour := 8;
+            end_hour := 14;
+        END IF;
+        -- Domingo: cerrado (no se generan slots)
+        
+        -- Generar slots cada hora si el día está configurado
+        IF start_hour IS NOT NULL AND end_hour IS NOT NULL THEN
             FOR hour IN start_hour..(end_hour - 1) LOOP
                 slot_datetime := (current_day + (hour || ' hours')::INTERVAL)::TIMESTAMP WITH TIME ZONE;
                 
@@ -186,6 +192,29 @@ END $$;
 -- ============================================
 -- Verificación final
 -- ============================================
+
+-- NOTA: Para el panel de admin, los emails de admin se configuran
+-- directamente en supabase.js en la constante ADMIN_EMAILS.
+-- Política temporal para permitir a admins ver todas las reservas:
+
+-- Agregar política para que admins vean todas las reservas
+-- (los admins se verifican en el frontend por email)
+DROP POLICY IF EXISTS "Admins ven todas las reservas" ON bookings;
+CREATE POLICY "Admins ven todas las reservas"
+ON bookings FOR SELECT
+USING (
+    auth.jwt() ->> 'email' IN ('allewmella@gmail.com', 'admin@odingym.cl')
+    OR auth.uid() = user_id
+);
+
+-- Agregar política para que admins actualicen cualquier reserva
+DROP POLICY IF EXISTS "Admins pueden actualizar reservas" ON bookings;
+CREATE POLICY "Admins pueden actualizar reservas"
+ON bookings FOR UPDATE
+USING (
+    auth.jwt() ->> 'email' IN ('allewmella@gmail.com', 'admin@odingym.cl')
+);
+
 SELECT 
     'Servicios creados: ' || COUNT(*)::TEXT as info
 FROM services;

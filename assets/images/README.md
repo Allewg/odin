@@ -51,3 +51,4 @@ Coloca las siguientes imágenes en este directorio:
 - Mantén la consistencia en el estilo visual (colores, iluminación)
 - Asegúrate de tener los derechos de uso de todas las imágenes
 
+

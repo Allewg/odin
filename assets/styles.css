@@ -642,6 +642,280 @@ textarea:focus {
   outline-offset: 2px;
 }
 
+/* FullCalendar Custom Styles for ODIN GYM */
+.fc {
+  --fc-border-color: #444;
+  --fc-button-bg-color: #1A1A1A;
+  --fc-button-border-color: #F2C94C;
+  --fc-button-text-color: #F2C94C;
+  --fc-button-hover-bg-color: #F2C94C;
+  --fc-button-hover-border-color: #F2C94C;
+  --fc-button-active-bg-color: #F2C94C;
+  --fc-button-active-border-color: #E6B821;
+  --fc-today-bg-color: rgba(242, 201, 76, 0.15);
+  --fc-page-bg-color: #1A1A1A;
+  --fc-neutral-bg-color: #1A1A1A;
+  --fc-list-event-hover-bg-color: rgba(242, 201, 76, 0.2);
+  --fc-event-bg-color: #F2C94C;
+  --fc-event-border-color: #E6B821;
+  --fc-event-text-color: #000;
+  background-color: #1A1A1A;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+/* Botones del calendario */
+.fc .fc-button {
+  background-color: #1A1A1A !important;
+  border-color: #F2C94C !important;
+  color: #F2C94C !important;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.fc .fc-button:hover {
+  background-color: #F2C94C !important;
+  color: #000 !important;
+}
+
+.fc .fc-button:active,
+.fc .fc-button-active,
+.fc .fc-button.fc-button-active {
+  background-color: #F2C94C !important;
+  color: #000 !important;
+}
+
+.fc .fc-button:disabled {
+  opacity: 0.5;
+}
+
+/* Grid del calendario */
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: #444 !important;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border-color: #444 !important;
+}
+
+.fc-scrollgrid-section-header {
+  background-color: #222 !important;
+}
+
+/* Números de días */
+.fc .fc-daygrid-day-number {
+  color: #fff;
+  padding: 8px 10px;
+  font-weight: 500;
+}
+
+.fc .fc-daygrid-day-top {
+  flex-direction: row;
+}
+
+/* Encabezados de días de la semana */
+.fc .fc-col-header-cell {
+  background-color: #222;
+  padding: 10px 0;
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: #F2C94C;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Día actual */
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: rgba(242, 201, 76, 0.15) !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  color: #F2C94C;
+  font-weight: 700;
+}
+
+/* Hover en días */
+.fc .fc-daygrid-day:hover {
+  background-color: rgba(242, 201, 76, 0.08);
+}
+
+/* Días del mes anterior/siguiente */
+.fc .fc-day-other .fc-daygrid-day-number {
+  color: #666;
+}
+
+/* Eventos (indicadores de slots disponibles) */
+.fc-event,
+.fc-daygrid-event {
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin: 2px 4px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.fc-event:hover,
+.fc-daygrid-event:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(242, 201, 76, 0.4);
+}
+
+.fc-daygrid-event-dot {
+  display: none;
+}
+
+/* Toolbar personalizado */
+.fc .fc-toolbar-title {
+  color: #F2C94C;
+  font-family: 'Syncopate', sans-serif;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #333;
+}
+
+/* Container de días */
+.fc .fc-daygrid-body {
+  background-color: #1A1A1A;
+}
+
+.fc .fc-daygrid-day-frame {
+  min-height: 80px;
+}
+
+/* Responsive calendar - Tablet */
+@media (max-width: 768px) {
+  .fc {
+    padding: 0.5rem;
+  }
+  
+  .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .fc .fc-toolbar-title {
+    font-size: 1rem;
+    order: -1;
+  }
+  
+  .fc-event,
+  .fc-daygrid-event {
+    font-size: 0.65rem;
+    padding: 2px 4px;
+  }
+  
+  .fc .fc-daygrid-day-frame {
+    min-height: 60px;
+  }
+  
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.7rem;
+  }
+  
+  .fc .fc-daygrid-day-number {
+    padding: 4px 6px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Responsive calendar - Mobile */
+@media (max-width: 480px) {
+  .fc {
+    padding: 0.25rem;
+    border-radius: 4px;
+  }
+  
+  .fc .fc-toolbar {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .fc .fc-toolbar-title {
+    font-size: 0.9rem;
+  }
+  
+  .fc .fc-button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  .fc .fc-button-group {
+    gap: 2px;
+  }
+  
+  .fc-event,
+  .fc-daygrid-event {
+    font-size: 0.55rem;
+    padding: 1px 2px;
+    margin: 1px 2px;
+    border-radius: 2px;
+  }
+  
+  .fc .fc-daygrid-day-frame {
+    min-height: 45px;
+  }
+  
+  .fc .fc-daygrid-day-number {
+    padding: 2px 4px;
+    font-size: 0.75rem;
+  }
+  
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.6rem;
+    padding: 4px 2px;
+  }
+  
+  .fc .fc-col-header-cell {
+    padding: 6px 0;
+  }
+  
+  /* Mostrar solo iniciales de días en móvil */
+  .fc .fc-col-header-cell-cushion {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 30px;
+    margin: 0 auto;
+  }
+  
+  .fc .fc-scrollgrid-sync-table {
+    width: 100% !important;
+  }
+}
+
+/* Panel de selección de horarios - Responsive */
+@media (max-width: 640px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .sm\:grid-cols-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  
+  .md\:grid-cols-6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
 /* Print styles */
 @media print {
   .no-print {

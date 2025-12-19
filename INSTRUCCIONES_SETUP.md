@@ -142,3 +142,4 @@ Después de ejecutar el script, verifica:
 
 **¿Necesitas ayuda?** Revisa los logs en la consola del navegador (F12) para ver mensajes de error específicos.
 
+

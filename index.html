@@ -21,11 +21,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/styles.css">
-    
-    <!-- FullCalendar CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+    <!-- Custom CSS (v2 para forzar recarga) -->
+    <link rel="stylesheet" href="assets/styles.css?v=2">
     
     <!-- LightGallery CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.2/css/lightgallery-bundle.min.css">
@@ -56,6 +53,10 @@
                     <button @click="openAccountModal()" class="nav-link">
                         <i class="fas fa-user mr-1"></i>Mi Cuenta
                     </button>
+                    <!-- Admin Link (solo visible para admins) -->
+                    <button x-show="isAdmin" @click="openAdminPanel()" class="nav-link text-primary-gold">
+                        <i class="fas fa-shield-alt mr-1"></i>Admin
+                    </button>
                     <a href="#contacto" class="btn-primary">Clase de Regalo</a>
                 </div>
                 
@@ -82,6 +83,10 @@
                 <a href="#contacto" @click="mobileMenuOpen = false" class="block py-2 nav-link">Contacto</a>
                 <button @click="mobileMenuOpen = false; openAccountModal()" class="block py-2 nav-link w-full text-left">
                     <i class="fas fa-user mr-1"></i>Mi Cuenta
+                </button>
+                <!-- Admin Link Mobile (solo visible para admins) -->
+                <button x-show="isAdmin" @click="mobileMenuOpen = false; openAdminPanel()" class="block py-2 nav-link w-full text-left text-primary-gold">
+                    <i class="fas fa-shield-alt mr-1"></i>Panel Admin
                 </button>
                 <a href="#contacto" @click="mobileMenuOpen = false" class="block py-2 btn-primary text-center">Clase de Regalo</a>
             </div>
@@ -944,8 +949,62 @@
                         Mi <span class="text-primary-gold">Cuenta</span>
                     </h2>
                     
+                    <!-- Formulario de cambio de contraseña (desde enlace de recuperación) - Se muestra primero si está activo -->
+                    <div x-show="showPasswordReset" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="max-w-2xl mx-auto mb-8">
+                        <div class="bg-bg-dark rounded-lg shadow-xl p-8">
+                            <div class="mb-6">
+                                <h3 class="text-2xl font-bold text-white mb-2">
+                                    <i class="fas fa-key mr-2 text-primary-gold"></i>Establecer Nueva Contraseña
+                                </h3>
+                                <p class="text-gray-400 text-sm">
+                                    Ingresa tu nueva contraseña. Debe tener al menos 6 caracteres.
+                                </p>
+                            </div>
+                            <form @submit.prevent="handlePasswordResetSubmit()" class="space-y-4">
+                                <div>
+                                    <label class="block text-gray-300 mb-2">Nueva Contraseña</label>
+                                    <input type="password" 
+                                           x-model="passwordResetForm.newPassword" 
+                                           required 
+                                           minlength="6"
+                                           class="w-full px-4 py-3 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold">
+                                    <p class="text-gray-500 text-xs mt-1">Mínimo 6 caracteres</p>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-300 mb-2">Confirmar Contraseña</label>
+                                    <input type="password" 
+                                           x-model="passwordResetForm.confirmPassword" 
+                                           required 
+                                           minlength="6"
+                                           class="w-full px-4 py-3 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold">
+                                </div>
+                                <button type="submit" 
+                                        :disabled="passwordResetLoading" 
+                                        class="btn-primary w-full">
+                                    <span x-show="!passwordResetLoading">
+                                        <i class="fas fa-save mr-2"></i>Actualizar Contraseña
+                                    </span>
+                                    <span x-show="passwordResetLoading">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i>Procesando...
+                                    </span>
+                                </button>
+                            </form>
+                            
+                            <!-- Mensaje de cambio de contraseña -->
+                            <div x-show="passwordResetMessage" 
+                                 :class="passwordResetSuccess ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'bg-red-500/20 text-red-400 border-red-500/50'"
+                                 class="mt-4 p-4 rounded-lg border text-sm" 
+                                 x-text="passwordResetMessage">
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Usuario no logueado: Login/Registro -->
-                    <div x-show="!user" class="max-w-2xl mx-auto">
+                    <div x-show="!user && !showPasswordReset" class="max-w-2xl mx-auto">
                         <div class="bg-bg-dark rounded-lg shadow-xl p-8">
                             <!-- Tabs -->
                             <div class="flex border-b border-gray-700 mb-6">
@@ -963,27 +1022,81 @@
                             
                             <!-- Login Form -->
                             <div x-show="authTab === 'login'">
-                                <form @submit.prevent="handleLoginSubmit()" class="space-y-4">
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Email</label>
-                                        <input type="email" x-model="loginForm.email" required 
-                                               class="w-full px-4 py-3 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold">
+                                <!-- Formulario de recuperación de contraseña -->
+                                <div x-show="showForgotPassword" 
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 -translate-y-2"
+                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     class="space-y-4">
+                                    <div class="flex items-center mb-4">
+                                        <button @click="showForgotPassword = false; forgotPasswordMessage = ''" 
+                                                class="text-gray-400 hover:text-white mr-2">
+                                            <i class="fas fa-arrow-left"></i>
+                                        </button>
+                                        <h4 class="text-lg font-bold text-white">Recuperar Contraseña</h4>
                                     </div>
-                                    <div>
-                                        <label class="block text-gray-300 mb-2">Contraseña</label>
-                                        <input type="password" x-model="loginForm.password" required 
-                                               class="w-full px-4 py-3 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold">
+                                    <p class="text-gray-400 text-sm mb-4">
+                                        Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
+                                    </p>
+                                    <form @submit.prevent="handleForgotPasswordSubmit()" class="space-y-4">
+                                        <div>
+                                            <label class="block text-gray-300 mb-2">Email</label>
+                                            <input type="email" 
+                                                   x-model="forgotPasswordForm.email" 
+                                                   required 
+                                                   class="w-full px-4 py-3 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold">
+                                        </div>
+                                        <button type="submit" 
+                                                :disabled="forgotPasswordLoading" 
+                                                class="btn-primary w-full">
+                                            <span x-show="!forgotPasswordLoading">
+                                                <i class="fas fa-paper-plane mr-2"></i>Enviar Enlace de Recuperación
+                                            </span>
+                                            <span x-show="forgotPasswordLoading">
+                                                <i class="fas fa-spinner fa-spin mr-2"></i>Enviando...
+                                            </span>
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Mensaje de recuperación -->
+                                    <div x-show="forgotPasswordMessage" 
+                                         :class="forgotPasswordSuccess ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'bg-red-500/20 text-red-400 border-red-500/50'"
+                                         class="p-4 rounded-lg border text-sm" 
+                                         x-text="forgotPasswordMessage">
                                     </div>
-                                    <button type="submit" :disabled="authLoading" class="btn-primary w-full">
-                                        <span x-show="!authLoading">Iniciar Sesión</span>
-                                        <span x-show="authLoading"><i class="fas fa-spinner fa-spin mr-2"></i>Procesando...</span>
-                                    </button>
-                                </form>
+                                </div>
                                 
-                                <div class="mt-4 text-center">
-                                    <button @click="handleMagicLinkSubmit()" :disabled="authLoading" class="text-primary-gold hover:underline">
-                                        O usa un enlace mágico (sin contraseña)
-                                    </button>
+                                <!-- Formulario de login normal -->
+                                <div x-show="!showForgotPassword">
+                                    <form @submit.prevent="handleLoginSubmit()" class="space-y-4">
+                                        <div>
+                                            <label class="block text-gray-300 mb-2">Email</label>
+                                            <input type="email" x-model="loginForm.email" required 
+                                                   class="w-full px-4 py-3 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-300 mb-2">Contraseña</label>
+                                            <input type="password" x-model="loginForm.password" required 
+                                                   class="w-full px-4 py-3 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold">
+                                        </div>
+                                        <div class="text-right">
+                                            <button type="button" 
+                                                    @click="showForgotPassword = true; forgotPasswordForm.email = loginForm.email || ''" 
+                                                    class="text-primary-gold hover:underline text-sm">
+                                                ¿Olvidaste tu contraseña?
+                                            </button>
+                                        </div>
+                                        <button type="submit" :disabled="authLoading" class="btn-primary w-full">
+                                            <span x-show="!authLoading">Iniciar Sesión</span>
+                                            <span x-show="authLoading"><i class="fas fa-spinner fa-spin mr-2"></i>Procesando...</span>
+                                        </button>
+                                    </form>
+                                    
+                                    <div class="mt-4 text-center">
+                                        <button @click="handleMagicLinkSubmit()" :disabled="authLoading" class="text-primary-gold hover:underline">
+                                            O usa un enlace mágico (sin contraseña)
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -1017,7 +1130,7 @@
                     </div>
                     
                     <!-- Usuario logueado: Perfil, Reserva y Mis Reservas -->
-                    <div x-show="user" class="max-w-6xl mx-auto">
+                    <div x-show="user && !showPasswordReset" class="max-w-6xl mx-auto">
                         <div class="grid md:grid-cols-3 gap-8">
                             <!-- Perfil -->
                             <div class="bg-bg-dark rounded-lg shadow-xl p-8">
@@ -1033,6 +1146,61 @@
                                         <p class="text-gray-400 text-sm">Usuario desde</p>
                                         <p class="text-white" x-text="formatDate(user?.created_at)"></p>
                                     </div>
+                                    
+                                    <!-- Cambiar Contraseña -->
+                                    <div class="mt-6 pt-6 border-t border-gray-700">
+                                        <button @click="showChangePassword = !showChangePassword" 
+                                                class="w-full text-left text-primary-gold hover:text-primary-gold/80 transition-colors mb-4">
+                                            <i class="fas fa-lock mr-2"></i>
+                                            <span x-text="showChangePassword ? 'Ocultar cambio de contraseña' : 'Cambiar contraseña'"></span>
+                                            <i :class="showChangePassword ? 'fa-chevron-up' : 'fa-chevron-down'" 
+                                               class="fas float-right mt-1"></i>
+                                        </button>
+                                        
+                                        <div x-show="showChangePassword" 
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0 -translate-y-2"
+                                             x-transition:enter-end="opacity-100 translate-y-0"
+                                             class="space-y-4">
+                                            <form @submit.prevent="handleChangePasswordSubmit()" class="space-y-4">
+                                                <div>
+                                                    <label class="block text-gray-300 mb-2 text-sm">Nueva Contraseña</label>
+                                                    <input type="password" 
+                                                           x-model="changePasswordForm.newPassword" 
+                                                           required 
+                                                           minlength="6"
+                                                           class="w-full px-4 py-2 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold text-sm">
+                                                    <p class="text-gray-500 text-xs mt-1">Mínimo 6 caracteres</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-gray-300 mb-2 text-sm">Confirmar Contraseña</label>
+                                                    <input type="password" 
+                                                           x-model="changePasswordForm.confirmPassword" 
+                                                           required 
+                                                           minlength="6"
+                                                           class="w-full px-4 py-2 bg-bg-dark-gray border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary-gold text-sm">
+                                                </div>
+                                                <button type="submit" 
+                                                        :disabled="changePasswordLoading" 
+                                                        class="btn-primary w-full text-sm py-2">
+                                                    <span x-show="!changePasswordLoading">
+                                                        <i class="fas fa-save mr-2"></i>Actualizar Contraseña
+                                                    </span>
+                                                    <span x-show="changePasswordLoading">
+                                                        <i class="fas fa-spinner fa-spin mr-2"></i>Procesando...
+                                                    </span>
+                                                </button>
+                                            </form>
+                                            
+                                            <!-- Mensaje de cambio de contraseña -->
+                                            <div x-show="changePasswordMessage" 
+                                                 :class="changePasswordSuccess ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'bg-red-500/20 text-red-400 border-red-500/50'"
+                                                 class="p-3 rounded-lg border text-sm" 
+                                                 x-text="changePasswordMessage">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <button @click="handleLogoutClick()" class="btn-secondary w-full mt-6">
                                         <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
                                     </button>
@@ -1045,14 +1213,76 @@
                                     <i class="fas fa-gift mr-2"></i>Reservar Clase de Prueba
                                 </h3>
                                 
-                                <!-- Calendario -->
-                                <div class="mb-6">
+                                <!-- Estado de carga inicial -->
+                                <div x-show="calendarLoading" class="text-center py-12">
+                                    <i class="fas fa-spinner fa-spin text-4xl text-primary-gold mb-4"></i>
+                                    <p class="text-gray-400">Cargando horarios disponibles...</p>
+                                </div>
+                                
+                                <!-- Error de conexión -->
+                                <div x-show="calendarError && !calendarLoading" class="text-center py-12">
+                                    <i class="fas fa-exclamation-triangle text-4xl text-yellow-400 mb-4"></i>
+                                    <p class="text-yellow-400 mb-4" x-text="calendarError"></p>
+                                    <div class="space-x-2">
+                                        <button @click="loadClasePruebaSlots()" class="btn-secondary text-sm py-2 px-4">
+                                            <i class="fas fa-redo mr-2"></i>Reintentar
+                                        </button>
+                                        <a href="https://wa.me/56935100120?text=Hola,%20quiero%20reservar%20mi%20clase%20de%20prueba" 
+                                           target="_blank" 
+                                           class="btn-primary text-sm py-2 px-4 inline-block">
+                                            <i class="fab fa-whatsapp mr-2"></i>Contactar por WhatsApp
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sin slots disponibles -->
+                                <div x-show="!calendarLoading && !calendarError && slotsCount === 0" class="text-center py-12">
+                                    <i class="fas fa-calendar-times text-4xl text-gray-500 mb-4"></i>
+                                    <p class="text-gray-400 mb-2">No hay horarios disponibles en este momento.</p>
+                                    <p class="text-gray-500 text-sm">Por favor, intenta más tarde o contáctanos por WhatsApp.</p>
+                                </div>
+                                
+                                <!-- Calendario (visible solo cuando hay slots) -->
+                                <div x-show="!calendarLoading && !calendarError && slotsCount > 0" class="mb-6">
+                                    <p class="text-gray-400 text-sm mb-4">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Selecciona un día para ver los horarios disponibles
+                                    </p>
                                     <div id="calendar" class="mb-6"></div>
                                     
+                                    <!-- Panel de selección de horario -->
+                                    <div x-show="selectedDate && availableHoursForDay.length > 0" 
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 -translate-y-2"
+                                         x-transition:enter-end="opacity-100 translate-y-0"
+                                         class="mt-6 p-4 bg-bg-dark-gray rounded-lg border border-gray-700">
+                                        <h4 class="font-bold text-lg mb-3 text-white">
+                                            <i class="fas fa-clock mr-2 text-primary-gold"></i>
+                                            Horarios disponibles para <span x-text="formatDate(selectedDate)" class="text-primary-gold"></span>
+                                        </h4>
+                                        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-4">
+                                            <template x-for="hour in availableHoursForDay" :key="hour.id">
+                                                <button @click="selectSlot(hour)" 
+                                                        :class="selectedSlot?.id === hour.id ? 'bg-primary-gold text-black' : 'bg-gray-700 hover:bg-gray-600 text-white'"
+                                                        class="px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                                    <span x-text="formatTime(hour.date_time)"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    
                                     <!-- Información del slot seleccionado -->
-                                    <div x-show="selectedSlot" class="mt-6 p-4 bg-primary-gold/10 rounded-lg border border-primary-gold">
-                                        <h4 class="font-bold text-lg mb-2 text-white">Slot seleccionado:</h4>
-                                        <p class="text-gray-300 mb-4" x-text="'Fecha: ' + formatDate(selectedSlot?.date_time) + ' - Hora: ' + formatTime(selectedSlot?.date_time)"></p>
+                                    <div x-show="selectedSlot" 
+                                         x-transition:enter="transition ease-out duration-200"
+                                         class="mt-6 p-4 bg-primary-gold/10 rounded-lg border border-primary-gold">
+                                        <h4 class="font-bold text-lg mb-2 text-white">
+                                            <i class="fas fa-check-circle mr-2 text-primary-gold"></i>Confirmar reserva:
+                                        </h4>
+                                        <p class="text-gray-300 mb-4">
+                                            <i class="fas fa-calendar mr-2"></i><span x-text="formatDate(selectedSlot?.date_time)"></span>
+                                            <span class="mx-2">|</span>
+                                            <i class="fas fa-clock mr-2"></i><span x-text="formatTime(selectedSlot?.date_time)"></span>
+                                        </p>
                                         <button @click="confirmBooking()" 
                                                 :disabled="bookingLoading"
                                                 class="btn-primary">
@@ -1106,6 +1336,117 @@
                                             </button>
                                         </div>
                                     </template>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Panel de Administración (solo visible para admins) -->
+                        <div x-show="isAdmin" id="admin-panel" class="mt-8">
+                            <div class="bg-bg-dark rounded-lg shadow-xl p-8 border border-primary-gold/30">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="font-syncopate text-2xl font-bold text-primary-gold">
+                                        <i class="fas fa-shield-alt mr-2"></i>Panel de Administración
+                                    </h3>
+                                    <button @click="loadAdminData()" 
+                                            :disabled="adminLoading"
+                                            class="btn-secondary text-sm py-2 px-4">
+                                        <i :class="adminLoading ? 'fa-spinner fa-spin' : 'fa-sync'" class="fas mr-2"></i>
+                                        Actualizar
+                                    </button>
+                                </div>
+                                
+                                <!-- Estadísticas -->
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                    <div class="bg-bg-dark-gray rounded-lg p-4 text-center border border-gray-700">
+                                        <p class="text-3xl font-bold text-primary-gold" x-text="adminStats.total || 0"></p>
+                                        <p class="text-gray-400 text-sm">Total Reservas</p>
+                                    </div>
+                                    <div class="bg-bg-dark-gray rounded-lg p-4 text-center border border-green-500/30">
+                                        <p class="text-3xl font-bold text-green-400" x-text="adminStats.confirmed || 0"></p>
+                                        <p class="text-gray-400 text-sm">Confirmadas</p>
+                                    </div>
+                                    <div class="bg-bg-dark-gray rounded-lg p-4 text-center border border-blue-500/30">
+                                        <p class="text-3xl font-bold text-blue-400" x-text="adminStats.upcoming || 0"></p>
+                                        <p class="text-gray-400 text-sm">Próximas</p>
+                                    </div>
+                                    <div class="bg-bg-dark-gray rounded-lg p-4 text-center border border-yellow-500/30">
+                                        <p class="text-3xl font-bold text-yellow-400" x-text="adminStats.thisWeek || 0"></p>
+                                        <p class="text-gray-400 text-sm">Esta Semana</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Filtros -->
+                                <div class="flex flex-wrap gap-4 mb-6">
+                                    <div class="flex items-center space-x-2">
+                                        <label class="text-gray-400 text-sm">Estado:</label>
+                                        <select x-model="adminFilter.status" 
+                                                @change="loadAdminBookings()"
+                                                class="bg-bg-dark-gray border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary-gold">
+                                            <option value="">Todos</option>
+                                            <option value="confirmed">Confirmadas</option>
+                                            <option value="cancelled">Canceladas</option>
+                                            <option value="completed">Completadas</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tabla de reservas -->
+                                <div class="overflow-x-auto">
+                                    <div x-show="adminLoading" class="text-center py-8">
+                                        <i class="fas fa-spinner fa-spin text-3xl text-primary-gold"></i>
+                                    </div>
+                                    
+                                    <div x-show="!adminLoading && adminBookings.length === 0" class="text-center py-8 text-gray-400">
+                                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                                        <p>No hay reservas para mostrar</p>
+                                    </div>
+                                    
+                                    <table x-show="!adminLoading && adminBookings.length > 0" class="w-full text-sm">
+                                        <thead>
+                                            <tr class="text-left border-b border-gray-700">
+                                                <th class="pb-3 text-primary-gold font-semibold">Fecha/Hora</th>
+                                                <th class="pb-3 text-primary-gold font-semibold">Servicio</th>
+                                                <th class="pb-3 text-primary-gold font-semibold">Usuario</th>
+                                                <th class="pb-3 text-primary-gold font-semibold">Estado</th>
+                                                <th class="pb-3 text-primary-gold font-semibold">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-700">
+                                            <template x-for="booking in adminBookings" :key="booking.id">
+                                                <tr class="hover:bg-bg-dark-gray/50 transition-colors">
+                                                    <td class="py-3">
+                                                        <div class="text-white" x-text="formatDate(booking.slots?.date_time)"></div>
+                                                        <div class="text-gray-400 text-xs" x-text="formatTime(booking.slots?.date_time)"></div>
+                                                    </td>
+                                                    <td class="py-3 text-white" x-text="booking.services?.name || 'N/A'"></td>
+                                                    <td class="py-3">
+                                                        <div class="text-white text-xs font-mono" x-text="booking.user_id?.substring(0, 8) + '...'"></div>
+                                                    </td>
+                                                    <td class="py-3">
+                                                        <span :class="{
+                                                            'bg-green-500/20 text-green-400 border-green-500/50': booking.status === 'confirmed',
+                                                            'bg-red-500/20 text-red-400 border-red-500/50': booking.status === 'cancelled',
+                                                            'bg-blue-500/20 text-blue-400 border-blue-500/50': booking.status === 'completed'
+                                                        }" class="px-2 py-1 rounded text-xs border" x-text="booking.status"></span>
+                                                    </td>
+                                                    <td class="py-3">
+                                                        <div class="flex items-center space-x-2">
+                                                            <button x-show="booking.status === 'confirmed'" 
+                                                                    @click="markAsCompleted(booking.id)"
+                                                                    class="text-blue-400 hover:text-blue-300 text-xs px-2 py-1 border border-blue-400/50 rounded hover:bg-blue-500/10 transition-colors">
+                                                                <i class="fas fa-check mr-1"></i>Completar
+                                                            </button>
+                                                            <button x-show="booking.status === 'confirmed'" 
+                                                                    @click="adminCancelBooking(booking.id)"
+                                                                    class="text-red-400 hover:text-red-300 text-xs px-2 py-1 border border-red-400/50 rounded hover:bg-red-500/10 transition-colors">
+                                                                <i class="fas fa-times mr-1"></i>Cancelar
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -1173,8 +1514,8 @@
     <!-- Vimeo Player API -->
     <script src="https://player.vimeo.com/api/player.js"></script>
     
-    <!-- Supabase Integration -->
-    <script src="assets/supabase.js"></script>
+    <!-- Supabase Integration (v6 para forzar recarga de cache) -->
+    <script src="assets/supabase.js?v=6"></script>
     
     <!-- FullCalendar JS -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -1190,7 +1531,12 @@
             return {
                 mobileMenuOpen: false,
                 scrolled: false,
-                init() {
+                isAdmin: false,
+                user: null,
+                
+                async init() {
+                    console.log('appData init() comenzando...');
+                    
                     // Scroll detection
                     window.addEventListener('scroll', () => {
                         this.scrolled = window.scrollY > 50;
@@ -1214,11 +1560,83 @@
                             }
                         });
                     });
+                    
+                    // Esperar a que Supabase esté disponible
+                    console.log('appData - esperando Supabase...');
+                    await this.waitForSupabase();
+                    console.log('appData - Supabase disponible:', !!window.odinGymSupabase);
+                    
+                    // Inicializar Supabase
+                    await window.odinGymSupabase?.initSupabase();
+                    
+                    // Verificar estado de admin
+                    console.log('appData - verificando admin...');
+                    await this.checkAdminStatus();
+                    console.log('appData init COMPLETADO - isAdmin:', this.isAdmin, 'user:', this.user?.email);
+                    
+                    // Escuchar cambios de autenticación
+                    window.odinGymSupabase?.onAuthStateChange(async (event, session) => {
+                        console.log('appData - auth change event:', event);
+                        this.user = session?.user || null;
+                        await this.checkAdminStatus();
+                        console.log('Auth changed - isAdmin:', this.isAdmin);
+                    });
+                },
+                
+                async waitForSupabase() {
+                    // Esperar hasta 3 segundos a que Supabase esté disponible
+                    for (let i = 0; i < 30; i++) {
+                        if (window.odinGymSupabase) return;
+                        await new Promise(r => setTimeout(r, 100));
+                    }
+                    console.warn('Supabase no disponible después de 3 segundos');
+                },
+                
+                async checkAdminStatus() {
+                    console.log('checkAdminStatus() - iniciando...');
+                    const adminEmails = ['allewmella@gmail.com', 'admin@odingym.cl'];
+                    
+                    try {
+                        // Intentar obtener el email de localStorage directamente
+                        const storageKey = 'sb-fdzhfflvmhwcbzzrqent-auth-token';
+                        const stored = localStorage.getItem(storageKey);
+                        
+                        if (stored) {
+                            const parsed = JSON.parse(stored);
+                            const email = parsed?.user?.email?.toLowerCase();
+                            console.log('checkAdminStatus() - email from storage:', email);
+                            
+                            if (email) {
+                                this.user = parsed.user;
+                                this.isAdmin = adminEmails.includes(email);
+                                console.log('checkAdminStatus() - RESULTADO isAdmin:', this.isAdmin);
+                                return;
+                            }
+                        }
+                        
+                        console.log('checkAdminStatus() - no session in storage');
+                        this.isAdmin = false;
+                    } catch (error) {
+                        console.error('checkAdminStatus() - error:', error);
+                        this.isAdmin = false;
+                    }
                 },
                 
                 openAccountModal() {
                     // Disparar evento personalizado para abrir el modal
                     document.dispatchEvent(new CustomEvent('open-account-modal'));
+                },
+                
+                openAdminPanel() {
+                    // Abrir modal y scrollear al panel de admin
+                    document.dispatchEvent(new CustomEvent('open-account-modal'));
+                    // Dar tiempo para que el modal se abra y luego scroll al panel admin
+                    setTimeout(() => {
+                        const adminPanel = document.getElementById('admin-panel');
+                        if (adminPanel) {
+                            adminPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 400);
                 }
             }
         }
@@ -1391,6 +1809,21 @@
                     email: '',
                     password: ''
                 },
+                showForgotPassword: false,
+                forgotPasswordForm: {
+                    email: ''
+                },
+                forgotPasswordLoading: false,
+                forgotPasswordMessage: '',
+                forgotPasswordSuccess: false,
+                showPasswordReset: false,
+                passwordResetForm: {
+                    newPassword: '',
+                    confirmPassword: ''
+                },
+                passwordResetLoading: false,
+                passwordResetMessage: '',
+                passwordResetSuccess: false,
                 bookings: [],
                 loadingBookings: false,
                 selectedSlot: null,
@@ -1400,13 +1833,50 @@
                 bookingSuccess: false,
                 selectedServiceId: null,
                 services: [],
+                // Nuevas propiedades para el calendario mejorado
+                calendarLoading: false,
+                calendarError: null,
+                slotsCount: 0,
+                allSlots: [],
+                selectedDate: null,
+                availableHoursForDay: [],
+                showChangePassword: false,
+                changePasswordForm: {
+                    newPassword: '',
+                    confirmPassword: ''
+                },
+                changePasswordLoading: false,
+                changePasswordMessage: '',
+                changePasswordSuccess: false,
+                // Propiedades de administración
+                isAdmin: false,
+                adminLoading: false,
+                adminBookings: [],
+                adminStats: {
+                    total: 0,
+                    confirmed: 0,
+                    cancelled: 0,
+                    completed: 0,
+                    thisWeek: 0,
+                    upcoming: 0
+                },
+                adminFilter: {
+                    status: ''
+                },
                 
                 openModal() {
                     this.modalOpen = true;
                     document.body.style.overflow = 'hidden';
+                    
+                    // Verificar admin status al abrir modal
+                    this.checkAdminStatus();
+                    
                     // Si el usuario está logueado, cargar slots automáticamente
                     if (this.user) {
-                        this.loadClasePruebaSlots();
+                        // Pequeño delay para que el modal termine de abrirse
+                        setTimeout(() => {
+                            this.loadClasePruebaSlots();
+                        }, 50);
                     }
                 },
                 
@@ -1424,6 +1894,25 @@
                         this.openModal();
                     });
                     
+                    // Escuchar evento para abrir modal de recuperación de contraseña
+                    document.addEventListener('open-password-reset', () => {
+                        console.log('Evento open-password-reset recibido');
+                        this.openModal();
+                        this.showPasswordReset = true;
+                        this.authTab = 'login'; // Asegurar que estamos en la pestaña de login
+                    });
+                    
+                    // Escuchar evento para mostrar error de recuperación
+                    document.addEventListener('password-reset-error', (event) => {
+                        console.log('Evento password-reset-error recibido:', event.detail);
+                        this.openModal();
+                        this.showForgotPassword = true;
+                        this.authTab = 'login';
+                        this.forgotPasswordForm.email = '';
+                        this.forgotPasswordMessage = event.detail.errorDescription || 'El enlace de recuperación es inválido o ha expirado. Por favor, solicita un nuevo enlace.';
+                        this.forgotPasswordSuccess = false;
+                    });
+                    
                     // Inicializar Supabase
                     try {
                         await window.odinGymSupabase?.initSupabase();
@@ -1431,14 +1920,27 @@
                         // Obtener usuario actual
                         this.user = await window.odinGymSupabase?.getCurrentUser();
                         
+                        // Si hay usuario después de la recuperación, mostrar formulario de cambio
+                        if (this.user) {
+                            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                            const type = hashParams.get('type');
+                            if (type === 'recovery') {
+                                this.showPasswordReset = true;
+                                this.openModal();
+                            }
+                        }
+                        
                         // Escuchar cambios de autenticación
                         window.odinGymSupabase?.onAuthStateChange(async (event, session) => {
                             this.user = session?.user || null;
                             if (this.user) {
                                 await this.loadBookings();
                                 await this.loadClasePruebaSlots();
+                                await this.checkAdminStatus();
                             } else {
                                 this.bookings = [];
+                                this.isAdmin = false;
+                                this.adminBookings = [];
                             }
                         });
                         
@@ -1446,6 +1948,7 @@
                         if (this.user) {
                             await this.loadBookings();
                             await this.loadClasePruebaSlots();
+                            await this.checkAdminStatus();
                         }
                     } catch (error) {
                         console.error('Error en init de cuentaData:', error);
@@ -1523,6 +2026,116 @@
                     }
                 },
                 
+                async handleForgotPasswordSubmit() {
+                    if (!this.forgotPasswordForm.email) {
+                        this.forgotPasswordMessage = 'Ingresa tu email';
+                        this.forgotPasswordSuccess = false;
+                        return;
+                    }
+                    
+                    this.forgotPasswordLoading = true;
+                    this.forgotPasswordMessage = '';
+                    
+                    const result = await window.odinGymSupabase?.resetPassword(this.forgotPasswordForm.email);
+                    
+                    this.forgotPasswordLoading = false;
+                    
+                    if (result?.success) {
+                        this.forgotPasswordMessage = result.message || 'Revisa tu email para el enlace de recuperación de contraseña';
+                        this.forgotPasswordSuccess = true;
+                        // Limpiar formulario después de 3 segundos y volver al login
+                        setTimeout(() => {
+                            this.showForgotPassword = false;
+                            this.forgotPasswordForm.email = '';
+                            this.forgotPasswordMessage = '';
+                        }, 3000);
+                    } else {
+                        this.forgotPasswordMessage = result?.error || 'Error al enviar email de recuperación';
+                        this.forgotPasswordSuccess = false;
+                    }
+                },
+                
+                async handlePasswordResetSubmit() {
+                    // Validar que las contraseñas coincidan
+                    if (this.passwordResetForm.newPassword !== this.passwordResetForm.confirmPassword) {
+                        this.passwordResetMessage = 'Las contraseñas no coinciden';
+                        this.passwordResetSuccess = false;
+                        return;
+                    }
+                    
+                    // Validar longitud mínima
+                    if (this.passwordResetForm.newPassword.length < 6) {
+                        this.passwordResetMessage = 'La contraseña debe tener al menos 6 caracteres';
+                        this.passwordResetSuccess = false;
+                        return;
+                    }
+                    
+                    this.passwordResetLoading = true;
+                    this.passwordResetMessage = '';
+                    
+                    const result = await window.odinGymSupabase?.updatePassword(
+                        this.passwordResetForm.newPassword
+                    );
+                    
+                    this.passwordResetLoading = false;
+                    
+                    if (result?.success) {
+                        this.passwordResetMessage = result.message || 'Contraseña actualizada exitosamente. Ya puedes iniciar sesión.';
+                        this.passwordResetSuccess = true;
+                        // Limpiar formulario
+                        this.passwordResetForm = { newPassword: '', confirmPassword: '' };
+                        // Ocultar formulario después de 2 segundos y mostrar login
+                        setTimeout(() => {
+                            this.showPasswordReset = false;
+                            this.passwordResetMessage = '';
+                            // El usuario ya está logueado, así que se mostrará su perfil
+                        }, 2000);
+                    } else {
+                        this.passwordResetMessage = result?.error || 'Error al cambiar la contraseña';
+                        this.passwordResetSuccess = false;
+                    }
+                },
+                
+                async handleChangePasswordSubmit() {
+                    // Validar que las contraseñas coincidan
+                    if (this.changePasswordForm.newPassword !== this.changePasswordForm.confirmPassword) {
+                        this.changePasswordMessage = 'Las contraseñas no coinciden';
+                        this.changePasswordSuccess = false;
+                        return;
+                    }
+                    
+                    // Validar longitud mínima
+                    if (this.changePasswordForm.newPassword.length < 6) {
+                        this.changePasswordMessage = 'La contraseña debe tener al menos 6 caracteres';
+                        this.changePasswordSuccess = false;
+                        return;
+                    }
+                    
+                    this.changePasswordLoading = true;
+                    this.changePasswordMessage = '';
+                    
+                    const result = await window.odinGymSupabase?.updatePassword(
+                        this.changePasswordForm.newPassword
+                    );
+                    
+                    this.changePasswordLoading = false;
+                    
+                    if (result?.success) {
+                        this.changePasswordMessage = result.message || 'Contraseña actualizada exitosamente';
+                        this.changePasswordSuccess = true;
+                        // Limpiar formulario
+                        this.changePasswordForm = { newPassword: '', confirmPassword: '' };
+                        // Ocultar formulario después de 2 segundos
+                        setTimeout(() => {
+                            this.showChangePassword = false;
+                            this.changePasswordMessage = '';
+                        }, 2000);
+                    } else {
+                        this.changePasswordMessage = result?.error || 'Error al cambiar la contraseña';
+                        this.changePasswordSuccess = false;
+                    }
+                },
+                
                 async handleLogoutClick() {
                     const result = await window.odinGymSupabase?.handleLogout();
                     if (result?.success) {
@@ -1558,6 +2171,153 @@
                     }
                 },
                 
+                // ============================================
+                // FUNCIONES DE ADMINISTRACIÓN
+                // ============================================
+                
+                async checkAdminStatus() {
+                    console.log('cuentaData.checkAdminStatus() - iniciando...');
+                    const adminEmails = ['allewmella@gmail.com', 'admin@odingym.cl'];
+                    
+                    try {
+                        // Obtener email de localStorage directamente (evita cuelgues)
+                        const storageKey = 'sb-fdzhfflvmhwcbzzrqent-auth-token';
+                        const stored = localStorage.getItem(storageKey);
+                        
+                        if (stored) {
+                            const parsed = JSON.parse(stored);
+                            const email = parsed?.user?.email?.toLowerCase();
+                            console.log('cuentaData.checkAdminStatus() - email:', email);
+                            
+                            if (email && adminEmails.includes(email)) {
+                                this.isAdmin = true;
+                                console.log('cuentaData - Usuario es administrador, cargando datos...');
+                                await this.loadAdminData();
+                                return;
+                            }
+                        }
+                        
+                        this.isAdmin = false;
+                    } catch (error) {
+                        console.error('cuentaData.checkAdminStatus() - error:', error);
+                        this.isAdmin = false;
+                    }
+                },
+                
+                async loadAdminData() {
+                    await Promise.all([
+                        this.loadAdminStats(),
+                        this.loadAdminBookings()
+                    ]);
+                },
+                
+                async loadAdminStats() {
+                    console.log('loadAdminStats() - iniciando...');
+                    try {
+                        // Obtener sesión de localStorage
+                        const storageKey = 'sb-fdzhfflvmhwcbzzrqent-auth-token';
+                        const stored = localStorage.getItem(storageKey);
+                        if (!stored) return;
+                        
+                        const parsed = JSON.parse(stored);
+                        const accessToken = parsed?.access_token;
+                        
+                        const response = await fetch('https://fdzhfflvmhwcbzzrqent.supabase.co/rest/v1/bookings?select=id,status,created_at,slots(date_time)', {
+                            headers: {
+                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkemhmZmx2bWh3Y2J6enJxZW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMjE3MTMsImV4cCI6MjA4MTU5NzcxM30.1qCfEj_mOz0iPEu1_NlO06DvPuSsyjEKPkY1PNLmLXo',
+                                'Authorization': `Bearer ${accessToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const bookings = await response.json();
+                            const now = new Date();
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            
+                            this.adminStats = {
+                                total: bookings.length,
+                                confirmed: bookings.filter(b => b.status === 'confirmed').length,
+                                cancelled: bookings.filter(b => b.status === 'cancelled').length,
+                                completed: bookings.filter(b => b.status === 'completed').length,
+                                thisWeek: bookings.filter(b => new Date(b.created_at) >= weekAgo).length,
+                                upcoming: bookings.filter(b => {
+                                    const slotDate = b.slots?.date_time ? new Date(b.slots.date_time) : null;
+                                    return slotDate && slotDate >= now && b.status === 'confirmed';
+                                }).length
+                            };
+                            console.log('loadAdminStats() - stats:', this.adminStats);
+                        }
+                    } catch (error) {
+                        console.error('loadAdminStats() - error:', error);
+                    }
+                },
+                
+                async loadAdminBookings() {
+                    console.log('loadAdminBookings() - iniciando...');
+                    this.adminLoading = true;
+                    
+                    try {
+                        const storageKey = 'sb-fdzhfflvmhwcbzzrqent-auth-token';
+                        const stored = localStorage.getItem(storageKey);
+                        if (!stored) {
+                            this.adminLoading = false;
+                            return;
+                        }
+                        
+                        const parsed = JSON.parse(stored);
+                        const accessToken = parsed?.access_token;
+                        
+                        let url = 'https://fdzhfflvmhwcbzzrqent.supabase.co/rest/v1/bookings?select=*,slots(id,date_time),services(id,name)&order=created_at.desc';
+                        
+                        if (this.adminFilter.status) {
+                            url += `&status=eq.${this.adminFilter.status}`;
+                        }
+                        
+                        const response = await fetch(url, {
+                            headers: {
+                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkemhmZmx2bWh3Y2J6enJxZW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMjE3MTMsImV4cCI6MjA4MTU5NzcxM30.1qCfEj_mOz0iPEu1_NlO06DvPuSsyjEKPkY1PNLmLXo',
+                                'Authorization': `Bearer ${accessToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        this.adminLoading = false;
+                        
+                        if (response.ok) {
+                            this.adminBookings = await response.json();
+                            console.log('loadAdminBookings() - bookings:', this.adminBookings.length);
+                        } else {
+                            console.error('loadAdminBookings() - error response:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('loadAdminBookings() - error:', error);
+                        this.adminLoading = false;
+                    }
+                },
+                
+                async markAsCompleted(bookingId) {
+                    if (!confirm('¿Marcar esta reserva como completada?')) return;
+                    
+                    const result = await window.odinGymSupabase?.updateBookingStatus(bookingId, 'completed');
+                    if (result?.success) {
+                        await this.loadAdminData();
+                    } else {
+                        alert(result?.error || 'Error al actualizar');
+                    }
+                },
+                
+                async adminCancelBooking(bookingId) {
+                    if (!confirm('¿Cancelar esta reserva?')) return;
+                    
+                    const result = await window.odinGymSupabase?.updateBookingStatus(bookingId, 'cancelled');
+                    if (result?.success) {
+                        await this.loadAdminData();
+                    } else {
+                        alert(result?.error || 'Error al cancelar');
+                    }
+                },
+                
                 formatDate(dateString) {
                     if (!dateString) return '';
                     const date = new Date(dateString);
@@ -1580,101 +2340,191 @@
                 async loadClasePruebaSlots() {
                     console.log('loadClasePruebaSlots() iniciando...');
                     
-                    // Buscar el servicio "Clase de Prueba" o "Clase de Regalo"
-                    if (!this.selectedServiceId) {
-                        const servicesResult = await window.odinGymSupabase?.getServices();
-                        console.log('Servicios encontrados:', servicesResult);
-                        
-                        if (servicesResult?.success && servicesResult.data) {
-                            // Buscar cualquier servicio si no hay uno con "prueba" o "regalo"
+                    // Resetear estados
+                    this.calendarLoading = true;
+                    this.calendarError = null;
+                    this.slotsCount = 0;
+                    this.allSlots = [];
+                    this.selectedDate = null;
+                    this.availableHoursForDay = [];
+                    this.selectedSlot = null;
+                    
+                    try {
+                        // Buscar el servicio directamente (sin llamar a initBookingSystem)
+                        if (!this.selectedServiceId) {
+                            console.log('loadClasePruebaSlots() - Buscando servicios...');
+                            const servicesResult = await window.odinGymSupabase?.getServices();
+                            console.log('loadClasePruebaSlots() - Servicios resultado:', servicesResult);
+                            
+                            if (!servicesResult?.success) {
+                                this.calendarError = servicesResult?.error || 'Error al cargar servicios. Verifica tu conexión.';
+                                this.calendarLoading = false;
+                                return;
+                            }
+                            
+                            if (!servicesResult.data || servicesResult.data.length === 0) {
+                                this.calendarError = 'No hay servicios configurados. Contacta al administrador.';
+                                this.calendarLoading = false;
+                                return;
+                            }
+                            
+                            // Buscar servicio de clase de prueba/regalo o usar el primero
                             let clasePrueba = servicesResult.data.find(s => 
                                 s.name.toLowerCase().includes('prueba') || 
                                 s.name.toLowerCase().includes('regalo')
-                            );
+                            ) || servicesResult.data[0];
                             
-                            // Si no encuentra, usar el primer servicio disponible
-                            if (!clasePrueba && servicesResult.data.length > 0) {
-                                clasePrueba = servicesResult.data[0];
-                                console.log('Usando primer servicio disponible:', clasePrueba.name);
-                            }
-                            
-                            if (clasePrueba) {
-                                this.selectedServiceId = clasePrueba.id;
-                                console.log('Servicio seleccionado:', clasePrueba.name, clasePrueba.id);
-                            }
+                            this.selectedServiceId = clasePrueba.id;
+                            console.log('loadClasePruebaSlots() - Servicio seleccionado:', clasePrueba.name, clasePrueba.id);
                         }
+                        
+                        // Obtener slots disponibles
+                        console.log('loadClasePruebaSlots() - Buscando slots para:', this.selectedServiceId);
+                        const startDate = new Date();
+                        const endDate = new Date();
+                        endDate.setMonth(endDate.getMonth() + 2);
+                        
+                        const result = await window.odinGymSupabase?.getAvailableSlots(
+                            this.selectedServiceId,
+                            startDate,
+                            endDate
+                        );
+                        
+                        console.log('Resultado de slots:', result);
+                        
+                        if (!result?.success) {
+                            this.calendarError = result?.error || 'Error al cargar horarios disponibles';
+                            this.calendarLoading = false;
+                            return;
+                        }
+                        
+                        this.allSlots = result.data || [];
+                        this.slotsCount = this.allSlots.length;
+                        console.log('Slots disponibles:', this.slotsCount);
+                        
+                        this.calendarLoading = false;
+                        
+                        if (this.slotsCount === 0) {
+                            return;
+                        }
+                        
+                        // Esperar un momento para que el DOM se actualice
+                        await this.$nextTick();
+                        
+                        // Inicializar calendario
+                        this.initCalendar();
+                        
+                    } catch (error) {
+                        console.error('Error en loadClasePruebaSlots:', error);
+                        this.calendarError = 'Error de conexión. Por favor, intenta de nuevo.';
+                        this.calendarLoading = false;
                     }
-                    
-                    if (!this.selectedServiceId) {
-                        console.log('No se encontró ningún servicio');
-                        return;
-                    }
-                    
-                    // Inicializar calendario
+                },
+                
+                initCalendar() {
                     const calendarEl = document.getElementById('calendar');
                     if (!calendarEl) {
                         console.log('Elemento #calendar no encontrado');
                         return;
                     }
                     
-                    // Destruir calendario existente si hay uno
+                    // Destruir calendario existente
                     if (this.calendar) {
                         this.calendar.destroy();
                         this.calendar = null;
                     }
                     
-                    // Obtener slots disponibles
-                    const startDate = new Date();
-                    const endDate = new Date();
-                    endDate.setMonth(endDate.getMonth() + 2); // 2 meses adelante
+                    // Agrupar slots por fecha para mostrar indicadores en el calendario
+                    const slotsByDate = {};
+                    this.allSlots.forEach(slot => {
+                        const date = slot.date_time.split('T')[0];
+                        if (!slotsByDate[date]) {
+                            slotsByDate[date] = [];
+                        }
+                        slotsByDate[date].push(slot);
+                    });
                     
-                    console.log('Buscando slots desde', startDate, 'hasta', endDate);
+                    // Crear eventos para el calendario (un evento por día con slots disponibles)
+                    const events = Object.keys(slotsByDate).map(date => ({
+                        id: date,
+                        title: `${slotsByDate[date].length} disponibles`,
+                        start: date,
+                        allDay: true,
+                        backgroundColor: '#F2C94C',
+                        borderColor: '#E6B821',
+                        textColor: '#000000',
+                        display: 'block',
+                        extendedProps: {
+                            slots: slotsByDate[date],
+                            count: slotsByDate[date].length
+                        }
+                    }));
                     
-                    const result = await window.odinGymSupabase?.getAvailableSlots(
-                        this.selectedServiceId,
-                        startDate,
-                        endDate
-                    );
+                    console.log('initCalendar() - Eventos creados:', events.length);
                     
-                    console.log('Resultado de slots:', result);
-                    
-                    if (result?.success) {
-                        const slots = result.data || [];
-                        console.log('Slots disponibles:', slots.length);
-                        
-                        // Configurar eventos para FullCalendar
-                        const events = slots.map(slot => ({
-                            id: slot.id,
-                            title: 'Disponible',
-                            start: slot.date_time,
-                            backgroundColor: '#F2C94C',
-                            borderColor: '#E6B821',
-                            textColor: '#000000',
-                            extendedProps: {
-                                slot: slot
+                    // Crear calendario con vista mensual
+                    this.calendar = new FullCalendar.Calendar(calendarEl, {
+                        initialView: 'dayGridMonth',
+                        locale: 'es',
+                        headerToolbar: {
+                            left: 'prev,next today',
+                            center: 'title',
+                            right: ''
+                        },
+                        buttonText: {
+                            today: 'Hoy'
+                        },
+                        events: events,
+                        eventClick: (info) => {
+                            info.jsEvent.preventDefault();
+                            this.selectDate(info.event.extendedProps.slots, info.event.startStr);
+                        },
+                        dateClick: (info) => {
+                            const daySlots = slotsByDate[info.dateStr];
+                            if (daySlots && daySlots.length > 0) {
+                                this.selectDate(daySlots, info.dateStr);
                             }
-                        }));
-                        
-                        // Crear calendario
-                        this.calendar = new FullCalendar.Calendar(calendarEl, {
-                            initialView: 'dayGridMonth',
-                            locale: 'es',
-                            headerToolbar: {
-                                left: 'prev,next today',
-                                center: 'title',
-                                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                            },
-                            events: events,
-                            eventClick: (info) => {
-                                this.selectedSlot = info.event.extendedProps.slot;
-                                this.bookingMessage = '';
-                            },
-                            eventDisplay: 'block',
-                            height: 'auto'
-                        });
-                        
-                        this.calendar.render();
-                    }
+                        },
+                        eventDisplay: 'block',
+                        height: 'auto',
+                        fixedWeekCount: false,
+                        showNonCurrentDates: true,
+                        dayMaxEvents: 1,
+                        moreLinkClick: 'day',
+                        dayCellClassNames: (arg) => {
+                            const dateStr = arg.date.toISOString().split('T')[0];
+                            if (slotsByDate[dateStr]) {
+                                return ['has-slots'];
+                            }
+                            return [];
+                        }
+                    });
+                    
+                    this.calendar.render();
+                    
+                    // Forzar actualización de tamaño después de que el modal esté visible
+                    setTimeout(() => {
+                        if (this.calendar) {
+                            this.calendar.updateSize();
+                            console.log('initCalendar() - Tamaño actualizado');
+                        }
+                    }, 100);
+                    
+                    console.log('initCalendar() - Calendario renderizado');
+                },
+                
+                selectDate(slots, dateStr) {
+                    this.selectedDate = dateStr;
+                    this.availableHoursForDay = slots.sort((a, b) => 
+                        new Date(a.date_time) - new Date(b.date_time)
+                    );
+                    this.selectedSlot = null;
+                    this.bookingMessage = '';
+                },
+                
+                selectSlot(slot) {
+                    this.selectedSlot = slot;
+                    this.bookingMessage = '';
                 },
                 
                 async confirmBooking() {
@@ -1715,9 +2565,11 @@
                     this.bookingLoading = false;
                     
                     if (result?.success) {
-                        this.bookingMessage = result.message || 'Reserva confirmada exitosamente';
+                        this.bookingMessage = result.message || '¡Reserva confirmada! Te esperamos en ODIN GYM.';
                         this.bookingSuccess = true;
                         this.selectedSlot = null;
+                        this.selectedDate = null;
+                        this.availableHoursForDay = [];
                         
                         // Recargar reservas y slots
                         await this.loadBookings();
