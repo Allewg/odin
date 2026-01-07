@@ -426,19 +426,23 @@
     <section class="py-20 bg-bg-dark-gray">
         <div class="container mx-auto px-4">
             <h2 class="font-syncopate text-4xl md:text-5xl font-bold text-center mb-12">
-                Nuestras <span class="text-primary-gold">Sedes</span>
+                Nuestra <span class="text-primary-gold">Sede</span>
             </h2>
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- San Bernardo -->
-                <div class="bg-bg-dark rounded-lg overflow-hidden shadow-xl">
-                    <div class="p-6">
+            
+            <!-- Layout con mapa a la izquierda y texto a la derecha -->
+            <div class="grid lg:grid-cols-2 gap-8 items-center max-w-6xl mx-auto">
+                <!-- IZQUIERDA: Mapa -->
+                <div class="bg-bg-dark rounded-lg overflow-hidden shadow-xl h-full">
+                    <div class="p-6 flex flex-col h-full">
                         <h3 class="font-syncopate text-2xl font-bold mb-4 text-primary-gold">
                             <i class="fas fa-map-marker-alt mr-2"></i>San Bernardo
                         </h3>
-                        <p class="text-gray-300 mb-4">Dirección: [Dirección San Bernardo]</p>
-                        <div class="aspect-video rounded-lg overflow-hidden mb-4">
+                        <p class="text-gray-300 mb-6">Dirección: <a href="https://share.google/DvbCkgKXIExQvRzvl" target="_blank" class="text-primary-gold font-bold underline hover:text-secondary-mustard transition-colors">San José 1067, San Bernardo</a></p>
+                        
+                        <!-- Mapa mejorado -->
+                        <div class="w-full rounded-lg overflow-hidden mb-6 flex-grow" style="min-height: 400px;">
                             <iframe 
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3329.1234567890123!2d-70.69812345678901!3d-33.59234567890123!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzPCsDM1JzMyLjQiUyA3MMKwNDEnNTMuMiJX!5e0!3m2!1ses!2scl!4v1234567890123!5m2!1ses!2scl"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3329.8567890123456!2d-70.6980234!3d-33.5938889!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9629a0e1234567%3A0x0!2sAv.%20San%20Jos%C3%A9%201067%2C%20San%20Bernardo!5e0!3m2!1ses!2scl!4v1704554400000" 
                                 width="100%" 
                                 height="100%" 
                                 style="border:0;" 
@@ -448,33 +452,85 @@
                                 class="w-full h-full">
                             </iframe>
                         </div>
-                        <a href="https://wa.me/56935100120" target="_blank" class="btn-primary w-full text-center">
+                        
+                        <a href="https://wa.me/56935100120?text=Hola,%20me%20interesa%20conocer%20más%20sobre%20ODIN%20GYM" target="_blank" class="btn-primary w-full text-center">
                             <i class="fab fa-whatsapp mr-2"></i>Contactar por WhatsApp
                         </a>
                     </div>
                 </div>
                 
-                <!-- Talagante -->
-                <div class="bg-bg-dark rounded-lg overflow-hidden shadow-xl">
-                    <div class="p-6">
-                        <h3 class="font-syncopate text-2xl font-bold mb-4 text-primary-gold">
-                            <i class="fas fa-map-marker-alt mr-2"></i>Talagante
+                <!-- DERECHA: Texto sobre ventajas -->
+                <div class="flex flex-col justify-center h-full">
+                    <div class="mb-8">
+                        <h3 class="font-syncopate text-3xl font-bold mb-6 text-primary-gold">
+                            ¿Por qué Entrenar en <span class="text-white">ODIN GYM</span>?
                         </h3>
-                        <p class="text-gray-300 mb-4">Dirección: [Dirección Talagante]</p>
-                        <div class="aspect-video rounded-lg overflow-hidden mb-4">
-                            <iframe 
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3329.1234567890123!2d-70.69812345678901!3d-33.59234567890123!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzPCsDM1JzMyLjQiUyA3MMKwNDEnNTMuMiJX!5e0!3m2!1ses!2scl!4v1234567890123!5m2!1ses!2scl"
-                                width="100%" 
-                                height="100%" 
-                                style="border:0;" 
-                                allowfullscreen="" 
-                                loading="lazy" 
-                                referrerpolicy="no-referrer-when-downgrade"
-                                class="w-full h-full">
-                            </iframe>
+                        
+                        <p class="text-gray-300 mb-6 text-lg leading-relaxed">
+                            ODIN GYM es más que un gimnasio. Es una comunidad dedicada a ayudarte a <strong class="text-primary-gold">superar tus límites</strong> en un ambiente único, sin aglomeraciones y con profesionales que se preocupan por tu progreso.
+                        </p>
+                    </div>
+                    
+                    <!-- Ventajas en lista -->
+                    <div class="space-y-4 mb-8">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-primary-gold rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-users-slash text-bg-dark font-bold"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-1">Sin Aglomeraciones</h4>
+                                <p class="text-gray-400">Gimnasio privado con capacidad limitada. Entrena cómodamente sin esperas.</p>
+                            </div>
                         </div>
-                        <a href="https://wa.me/56981326755" target="_blank" class="btn-primary w-full text-center">
-                            <i class="fab fa-whatsapp mr-2"></i>Contactar por WhatsApp
+                        
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-primary-gold rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-user-tie text-bg-dark font-bold"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-1">Entrenamiento Personalizado</h4>
+                                <p class="text-gray-400">Profesores certificados siempre disponibles para guiarte en cada sesión.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-primary-gold rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-heart text-bg-dark font-bold"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-1">Ambiente Familiar</h4>
+                                <p class="text-gray-400">Una comunidad que se apoya mutuamente. Juntos alcanzamos nuestros objetivos.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-primary-gold rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-dumbbell text-bg-dark font-bold"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-1">Equipamiento de Primera</h4>
+                                <p class="text-gray-400">Máquinas modernas, pesas libres, zona CrossFit y sistema DJ personalizado.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-primary-gold rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fas fa-parking text-bg-dark font-bold"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-1">Estacionamiento Gratuito</h4>
+                                <p class="text-gray-400">Ven en auto sin preocupaciones. Estacionamiento disponible para todos nuestros miembros.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CTA -->
+                    <div class="bg-gradient-to-r from-primary-gold/20 to-secondary-mustard/20 rounded-lg p-6 border border-primary-gold/30">
+                        <p class="text-white mb-4 font-semibold">
+                            Eres un guerrero vikingo. En ODIN GYM te ayudamos a demostrar tu fortaleza.
+                        </p>
+                        <a href="#contacto" class="btn-primary inline-block">
+                            <i class="fas fa-gift mr-2"></i>Solicita tu Clase de Regalo Gratis
                         </a>
                     </div>
                 </div>
@@ -1594,7 +1650,7 @@
                 
                 async checkAdminStatus() {
                     console.log('checkAdminStatus() - iniciando...');
-                    const adminEmails = ['allewmella@gmail.com', 'admin@odingym.cl'];
+                    const adminEmails = ['allewmella@gmail.com', 'admin@odingym.cl', 'odin.educacionynutricion@gmail.com'];
                     
                     try {
                         // Intentar obtener el email de localStorage directamente
@@ -2177,7 +2233,7 @@
                 
                 async checkAdminStatus() {
                     console.log('cuentaData.checkAdminStatus() - iniciando...');
-                    const adminEmails = ['allewmella@gmail.com', 'admin@odingym.cl'];
+                    const adminEmails = ['allewmella@gmail.com', 'admin@odingym.cl', 'odin.educacionynutricion@gmail.com'];
                     
                     try {
                         // Obtener email de localStorage directamente (evita cuelgues)

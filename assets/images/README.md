@@ -52,3 +52,5 @@ Coloca las siguientes imágenes en este directorio:
 - Asegúrate de tener los derechos de uso de todas las imágenes
 
 
+
+

@@ -78,3 +78,5 @@ El código ya está configurado para detectar automáticamente la URL local usan
 - Si el enlace expira, simplemente solicita uno nuevo
 - El código ahora maneja automáticamente los errores y muestra mensajes apropiados al usuario
 
+
+
